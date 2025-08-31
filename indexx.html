@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Countdown + Themes</title>
+  <meta name="description" content="A customizable event countdown site with unique themes (birthdays, trips, exams, and more)." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Pacifico&family=Poppins:wght@300;500;700&family=Space+Grotesk:wght@400;600;700&family=Great+Vibes&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f1226; --muted:#9aa3b2; --card:#161a33; --text:#e8ecf1; --primary:#7aa2ff; --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Poppins, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 10% -10%, #1b2155 0%, #0f1226 60%), #0f1226;
+      color:var(--text); line-height:1.4;
+    }
+    header{
+      position:sticky; top:0; z-index:10; backdrop-filter:saturate(1.2) blur(10px);
+      background:linear-gradient(180deg, rgba(15,18,38,0.9), rgba(15,18,38,0.6));
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:16px 20px}
+    .hero{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+    .logo{display:flex; align-items:center; gap:12px}
+    .logo .dot{width:14px; height:14px; border-radius:50%; background:conic-gradient(from 0deg, #7aa2ff, #7affc7, #ffb86b, #ff79c6, #7aa2ff)}
+    h1{font-size:28px; margin:0; letter-spacing:0.2px}
+    .actions{margin-left:auto; display:flex; gap:10px}
+    button, .btn{
+      background:linear-gradient(180deg, #2a2f61, #1b1f46);
+      color:var(--text); border:1px solid rgba(255,255,255,0.15);
+      border-radius:12px; padding:10px 14px; cursor:pointer; font-weight:600;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    button:hover{transform:translateY(-1px)}
+    .muted{color:var(--muted)}
+
+    /* Layout */
+    .content{padding:18px 20px}
+    .grid{display:grid; grid-template-columns:repeat(12, 1fr); gap:16px; max-width:1100px; margin:0 auto}
+    .sidebar{grid-column: span 4}
+    .main{grid-column: span 8}
+    @media (max-width: 960px){.sidebar{grid-column:1/-1; order:2} .main{grid-column:1/-1; order:1}}
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border:1px solid rgba(255,255,255,0.08); border-radius:var(--radius);
+      padding:16px; position:relative; overflow:hidden;
+    }
+    .card h3{margin:0 0 8px; font-size:18px}
+    .card small{color:var(--muted)}
+
+    /* Form */
+    .form-row{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    .form-row > * {min-width:0}
+    .form-group{margin-bottom:12px}
+    label{display:block; font-size:13px; color:var(--muted); margin:0 0 6px}
+    input[type="text"], input[type="datetime-local"], select, textarea{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);
+      background:#0e1127; color:var(--text); outline:none;
+    }
+    .inline{display:flex; gap:10px; align-items:center}
+
+    /* Countdown cards */
+    .cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px}
+    .countdown-card{position:relative; padding:18px; border-radius:18px; overflow:hidden; border:1px solid rgba(255,255,255,0.12)}
+    .countdown-card .title{display:flex; align-items:center; gap:10px; font-weight:800; font-size:18px}
+    .chip{font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.22); background:rgba(255,255,255,0.06)}
+    .when{font-size:12px; color:var(--muted)}
+    .time{font-family:Space Grotesk, Menlo, Monaco, monospace; font-weight:700; letter-spacing:1px; font-size:28px; margin:10px 0 4px}
+    .subtime{font-size:12px; color:var(--muted)}
+    .card-actions{display:flex; gap:8px; margin-top:12px}
+    .ghost{background:transparent; border-color:rgba(255,255,255,0.25)}
+    .danger{background:linear-gradient(180deg, #5b1c2a, #321018); border-color:rgba(255,0,72,0.3)}
+
+    /* Theme badges and visuals */
+    .flare{position:absolute; inset:auto -40px -40px auto; width:180px; height:180px; filter:blur(20px); opacity:0.6; transform:rotate(25deg)}
+    .confetti{position:absolute; inset:0; pointer-events:none}
+
+    /* Specific Themes (7+ unique looks) */
+    /* 1) Birthday – playful confetti vibe */
+    .theme-birthday{
+      background: radial-gradient(120px 80px at 20% -10%, #ffd1e8, transparent 60%),
+                  radial-gradient(120px 80px at 110% 10%, #ffe7b8, transparent 60%),
+                  linear-gradient(145deg, #8a7aff, #ff79c6);
+    }
+    .theme-birthday .title{font-family:Nunito, sans-serif}
+    .theme-birthday .flare{background:conic-gradient(#ff79c6, #ffb86b, #8be9fd, #bd93f9, #ff79c6)}
+
+    /* 2) Trip – ocean gradient */
+    .theme-trip{
+      background: linear-gradient(145deg, #0ea5e9, #1e3a8a);
+    }
+    .theme-trip .title{font-family:Montserrat, sans-serif}
+    .theme-trip .flare{background:conic-gradient(#0ea5e9, #22d3ee, #a7f3d0, #38bdf8, #0ea5e9)}
+
+    /* 3) Exam – focused minimal */
+    .theme-exam{ background: linear-gradient(145deg, #0a0f1e, #1f2937); }
+    .theme-exam .title{font-family:Space Grotesk, monospace}
+    .theme-exam .time{font-size:30px}
+    .theme-exam .flare{background:conic-gradient(#94a3b8, #cbd5e1, #64748b, #0ea5e9, #94a3b8)}
+
+    /* 4) Anniversary – elegant script */
+    .theme-anniversary{ background: linear-gradient(145deg, #3f2b96, #a8c0ff); }
+    .theme-anniversary .title{font-family:Great Vibes, cursive; font-size:26px}
+    .theme-anniversary .flare{background:conic-gradient(#fbcfe8, #fde68a, #c7d2fe, #fbcfe8)}
+
+    /* 5) Festival – vibrant neon */
+    .theme-festival{ background: linear-gradient(145deg, #ff006e, #8338ec); }
+    .theme-festival .title{font-family:Pacifico, cursive}
+    .theme-festival .flare{background:conic-gradient(#ff006e, #fb5607, #ffbe0b, #3a86ff, #ff006e)}
+
+    /* 6) Minimal – calm neutral */
+    .theme-minimal{ background: linear-gradient(145deg, #111827, #0b1220); border-color:rgba(255,255,255,0.08)}
+    .theme-minimal .title{font-family:Poppins, sans-serif}
+    .theme-minimal .flare{background:conic-gradient(#94a3b8, #e5e7eb, #9ca3af, #64748b, #94a3b8)}
+
+    /* 7) Pastel – soft gradients */
+    .theme-pastel{ background: linear-gradient(145deg, #fbc2eb, #a6c1ee); color:#1b1b1b }
+    .theme-pastel .title{font-family:Nunito, sans-serif}
+    .theme-pastel .chip, .theme-pastel small, .theme-pastel .subtime{color:#2a2a2a; border-color:rgba(0,0,0,0.25)}
+    .theme-pastel .when{color:#333}
+    .theme-pastel .flare{background:conic-gradient(#ffe4e6, #e9d5ff, #dbeafe, #fecdd3, #ffe4e6); opacity:0.8}
+
+    /* 8) Gamer – retro grid */
+    .theme-gamer{
+      background: radial-gradient(circle at 50% -20%, rgba(0,255,170,0.3), transparent 40%),
+                  linear-gradient(#121212 1px, transparent 1px), linear-gradient(90deg, #121212 1px, transparent 1px);
+      background-size: auto, 22px 22px, 22px 22px;
+      background-position: 0 0, 0 0, 0 0;
+      border-color: rgba(0,255,170,0.3);
+      box-shadow: 0 0 0 1px rgba(0,255,170,0.15) inset;
+    }
+    .theme-gamer .title{font-family:Space Grotesk, monospace}
+    .theme-gamer .flare{background:conic-gradient(#00ffaa, #00e5ff, #9d4edd, #00ffaa)}
+
+    .empty{border:1px dashed rgba(255,255,255,0.15); border-radius:var(--radius); padding:24px; text-align:center; color:var(--muted)}
+    .hint{font-size:12px; color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hero">
+      <div class="logo"><div class="dot"></div><h1>Countdown + Themes</h1></div>
+      <div class="actions">
+        <button id="toggleFormBtn" aria-expanded="true">➕ Add Event</button>
+        <button id="exportBtn" class="ghost" title="Export your events as a file">⤓ Export</button>
+        <label class="btn ghost" for="importFile" title="Import events from file" style="cursor:pointer">⤒ Import</label>
+        <input id="importFile" type="file" accept="application/json" style="display:none" />
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="grid">
+      <aside class="sidebar">
+        <div class="card" id="formCard">
+          <h3>Create / Edit Event</h3>
+          <form id="eventForm">
+            <input type="hidden" id="eventId" />
+
+            <div class="form-group">
+              <label for="title">Title</label>
+              <input id="title" type="text" placeholder="e.g., Aaliya's Birthday" required />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="datetime">Date & Time</label>
+                <input id="datetime" type="datetime-local" required />
+              </div>
+              <div class="form-group">
+                <label for="emoji">Icon (optional)</label>
+                <input id="emoji" type="text" placeholder="🎂 ✈️ 📚 💍" maxlength="2" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="theme">Theme</label>
+                <select id="theme">
+                  <option value="birthday">Birthday</option>
+                  <option value="trip">Trip</option>
+                  <option value="exam">Exam</option>
+                  <option value="anniversary">Anniversary</option>
+                  <option value="festival">Festival</option>
+                  <option value="minimal">Minimal</option>
+                  <option value="pastel">Pastel</option>
+                  <option value="gamer">Gamer</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="note">Note (optional)</label>
+                <input id="note" type="text" placeholder="Venue, reminder, etc." />
+              </div>
+            </div>
+
+            <div class="inline" style="justify-content:space-between; margin-top:8px">
+              <div class="hint">All events auto‑save to your browser</div>
+              <div>
+                <button type="submit">💾 Save</button>
+                <button type="button" id="resetBtn" class="ghost">↺ Reset</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Tips</h3>
+          <ul class="muted" style="margin:8px 0 0 18px">
+            <li>Add multiple events. They update every second.</li>
+            <li>Pick a theme to match the vibe.</li>
+            <li>Export & import to move between devices.</li>
+          </ul>
+        </div>
+      </aside>
+
+      <section class="main">
+        <div class="card">
+          <div class="inline" style="justify-content:space-between; align-items:flex-end">
+            <div>
+              <h3>Your Countdowns</h3>
+              <small class="muted">Watch the seconds melt away ✨</small>
+            </div>
+            <div class="inline" style="gap:6px">
+              <input id="search" type="text" placeholder="Search title…" style="width:220px" />
+              <select id="filterTheme">
+                <option value="">All themes</option>
+                <option value="birthday">Birthday</option>
+                <option value="trip">Trip</option>
+                <option value="exam">Exam</option>
+                <option value="anniversary">Anniversary</option>
+                <option value="festival">Festival</option>
+                <option value="minimal">Minimal</option>
+                <option value="pastel">Pastel</option>
+                <option value="gamer">Gamer</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="cards" class="cards" style="margin-top:16px">
+          <!-- Countdown cards injected here -->
+        </div>
+
+        <div id="emptyState" class="empty" style="display:none; margin-top:16px">
+          No events yet. Add your first one →
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <template id="cardTemplate">
+    <div class="countdown-card">
+      <canvas class="confetti"></canvas>
+      <div class="flare"></div>
+      <div class="inline" style="justify-content:space-between">
+        <div class="title"><span class="emoji"></span><span class="title-text"></span></div>
+        <span class="chip theme-name"></span>
+      </div>
+      <div class="when"></div>
+      <div class="time">00d : 00h : 00m : 00s</div>
+      <div class="subtime"></div>
+      <div class="card-actions">
+        <button class="ghost edit">✏️ Edit</button>
+        <button class="danger delete">🗑️ Delete</button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    const $ = (q, el=document) => el.querySelector(q);
+    const $$ = (q, el=document) => [...el.querySelectorAll(q)];
+
+    const form = $('#eventForm');
+    const fields = {
+      id: $('#eventId'),
+      title: $('#title'),
+      datetime: $('#datetime'),
+      emoji: $('#emoji'),
+      theme: $('#theme'),
+      note: $('#note'),
+    };
+    const cardsEl = $('#cards');
+    const emptyState = $('#emptyState');
+    const search = $('#search');
+    const filterTheme = $('#filterTheme');
+    const toggleFormBtn = $('#toggleFormBtn');
+    const exportBtn = $('#exportBtn');
+    const importFile = $('#importFile');
+    const resetBtn = $('#resetBtn');
+
+    let events = loadEvents();
+    let tickTimer = null;
+
+    function uid(){ return Math.random().toString(36).slice(2,10); }
+
+    function saveEvents(){
+      localStorage.setItem('countdown.events.v1', JSON.stringify(events));
+    }
+    function loadEvents(){
+      try{
+        const raw = localStorage.getItem('countdown.events.v1');
+        if(raw){ return JSON.parse(raw); }
+      }catch(e){ console.warn('Failed to load events', e); }
+      // Seed examples for first-time users
+      const now = new Date();
+      const sample = [
+        {id: uid(), title: "Aaliya's Birthday", at: new Date(now.getFullYear(), now.getMonth(), now.getDate()+10, 19, 30).toISOString(), emoji:'🎂', theme:'birthday', note:'Chocolate cake!'},
+        {id: uid(), title: "Goa Trip", at: new Date(now.getFullYear(), now.getMonth()+1, 5, 6, 0).toISOString(), emoji:'✈️', theme:'trip', note:'Flight 6:00 AM'},
+        {id: uid(), title: "DSA Exam", at: new Date(now.getFullYear(), now.getMonth(), now.getDate()+3, 9, 0).toISOString(), emoji:'📚', theme:'exam', note:'Hall 2'}
+      ];
+      return sample;
+    }
+
+    function fmtDate(iso){
+      const d = new Date(iso);
+      const opts = {weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'};
+      return d.toLocaleString(undefined, opts);
+    }
+
+    function diffParts(ms){
+      const neg = ms < 0; ms = Math.abs(ms);
+      const s = Math.floor(ms/1000);
+      const days = Math.floor(s/86400);
+      const hours = Math.floor((s%86400)/3600);
+      const mins = Math.floor((s%3600)/60);
+      const secs = s%60;
+      return {neg, days, hours, mins, secs};
+    }
+
+    function render(){
+      const q = search.value.trim().toLowerCase();
+      const themeFilter = filterTheme.value;
+      const list = events
+        .slice()
+        .sort((a,b)=> new Date(a.at) - new Date(b.at))
+        .filter(e => (!q || e.title.toLowerCase().includes(q)) && (!themeFilter || e.theme === themeFilter));
+
+      cardsEl.innerHTML = '';
+      emptyState.style.display = list.length ? 'none' : 'block';
+
+      for(const e of list){
+        const tpl = document.getElementById('cardTemplate');
+        const node = tpl.content.firstElementChild.cloneNode(true);
+        node.dataset.id = e.id;
+        node.classList.add('theme-'+e.theme);
+
+        $('.title-text', node).textContent = e.title;
+        $('.emoji', node).textContent = e.emoji || '';
+        $('.theme-name', node).textContent = capitalize(e.theme);
+        $('.when', node).innerHTML = `<span class="when">${fmtDate(e.at)}</span>${e.note? ` · <span class="chip">${escapeHtml(e.note)}</span>`:''}`;
+
+        $('.edit', node).addEventListener('click', ()=> startEdit(e.id));
+        $('.delete', node).addEventListener('click', ()=> removeEvent(e.id));
+
+        cardsEl.appendChild(node);
+      }
+    }
+
+    function tick(){
+      const now = Date.now();
+      $$('.countdown-card').forEach(card => {
+        const id = card.dataset.id;
+        const e = events.find(x=>x.id===id); if(!e) return;
+        const ms = new Date(e.at).getTime() - now;
+        const {neg, days, hours, mins, secs} = diffParts(ms);
+        const timeEl = $('.time', card);
+        timeEl.textContent = `${pad(days)}d : ${pad(hours)}h : ${pad(mins)}m : ${pad(secs)}s`;
+        const sub = $('.subtime', card);
+        sub.textContent = neg ? 'Event started' : 'Time remaining';
+
+        if(!card._celebrated && ms <= 0){
+          card._celebrated = true;
+          celebrate(card);
+        }
+      });
+    }
+
+    function celebrate(card){
+      // Quick confetti burst on the card canvas
+      const canvas = $('.confetti', card);
+      const ctx = canvas.getContext('2d');
+      const rect = card.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      const pieces = Array.from({length: 80}, () => ({
+        x: Math.random()*canvas.width, y: -Math.random()*50,
+        vy: 2+Math.random()*3, vx: (Math.random()-0.5)*2,
+        r: 3+Math.random()*4, a: 1, hue: Math.floor(Math.random()*360)
+      }));
+      let frames = 0;
+      function step(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        for(const p of pieces){
+          ctx.fillStyle = `hsla(${p.hue}, 90%, 60%, ${p.a})`;
+          ctx.beginPath(); ctx.rect(p.x, p.y, p.r, p.r*2); ctx.fill();
+          p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.a -= 0.006;
+        }
+        frames++;
+        if(frames < 220){ requestAnimationFrame(step); }
+      }
+      step();
+    }
+
+    function startEdit(id){
+      const e = events.find(x=>x.id===id); if(!e) return;
+      fields.id.value = e.id;
+      fields.title.value = e.title;
+      fields.datetime.value = toLocalInputValue(e.at);
+      fields.emoji.value = e.emoji || '';
+      fields.theme.value = e.theme;
+      fields.note.value = e.note || '';
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    function removeEvent(id){
+      if(!confirm('Delete this event?')) return;
+      events = events.filter(x=>x.id!==id);
+      saveEvents();
+      render();
+    }
+
+    function toLocalInputValue(iso){
+      const d = new Date(iso);
+      const pad2 = n=> String(n).padStart(2,'0');
+      const v = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+      return v;
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+    }
+
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const id = fields.id.value || uid();
+      const title = fields.title.value.trim();
+      const at = new Date(fields.datetime.value);
+      if(!title || !(at instanceof Date) || isNaN(+at)){
+        alert('Please provide a valid title and date/time.');
+        return;
+      }
+      const item = {
+        id,
+        title,
+        at: at.toISOString(),
+        emoji: fields.emoji.value.trim(),
+        theme: fields.theme.value,
+        note: fields.note.value.trim()
+      };
+      const idx = events.findIndex(x=>x.id===id);
+      if(idx>=0) events[idx] = item; else events.push(item);
+      saveEvents();
+      form.reset(); fields.id.value='';
+      render();
+    });
+
+    resetBtn.addEventListener('click', ()=>{ form.reset(); fields.id.value=''; });
+
+    search.addEventListener('input', render);
+    filterTheme.addEventListener('change', render);
+
+    toggleFormBtn.addEventListener('click', ()=>{
+      const card = document.getElementById('formCard');
+      const isHidden = card.style.display === 'none';
+      card.style.display = isHidden ? '' : 'none';
+      toggleFormBtn.setAttribute('aria-expanded', String(isHidden));
+    });
+
+    exportBtn.addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(events, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'countdowns.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    importFile.addEventListener('change', (e)=>{
+      const file = e.target.files?.[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        try{
+          const data = JSON.parse(String(reader.result));
+          if(Array.isArray(data)){
+            // Basic validation
+            const cleaned = data.filter(x=> x && x.id && x.title && x.at && x.theme);
+            events = cleaned; saveEvents(); render();
+          } else { alert('Invalid file.'); }
+        }catch(err){ alert('Failed to import.'); }
+      };
+      reader.readAsText(file);
+      importFile.value = '';
+    });
+
+    // Init
+    render();
+    tickTimer = setInterval(tick, 1000);
+    tick();
+  </script>
+</body>
+</html>
